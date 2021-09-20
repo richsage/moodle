@@ -177,10 +177,16 @@ class cachestore_redis extends cache_store implements cache_is_key_aware, cache_
         $redis = new Redis();
         // Check if it isn't a Unix socket to set default port.
         $port = ($server[0] === '/') ? null : 6379;
+
+        // Check for any protocol requirements eg TLS that have been specified.
         if (strpos($server, ':')) {
-            $serverconf = explode(':', $server);
-            $server = $serverconf[0];
-            $port = $serverconf[1];
+            $serverconf = parse_url($server);
+
+            $port = $serverconf['port'] ?? $port;
+            $scheme = $serverconf['scheme'] ?? '';
+            $host = $serverconf['host'] ?? '';
+            $server = (strlen($scheme) ? $scheme . '://' : '');
+            $server .= $host;
         }
 
         try {
